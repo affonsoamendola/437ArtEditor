@@ -101,10 +101,22 @@ void fill_screen(unsigned char character, unsigned char attribute, int page)
 	}
 }
 
+void set_char_on_rect_at(unsigned char far * destination, int posX, int posY, RECT rect, unsigned char character)
+{
+
+	*((unsigned char far *)destination + ((posX + rect.x) * 2) + ((posY + rect.y) * (rect.size_x * 2))    )  = character;
+}
+
+void set_attribute_on_rect_at(unsigned char far * destination, int posX, int posY, RECT rect, unsigned char attribute)
+{
+
+	*((unsigned char far *)destination + ((posX + rect.x) * 2) + ((posY + rect.y) * (rect.size_x * 2)) + 1)  = attribute;	
+}
+
 void draw_char_on_rect_at(unsigned char far * destination, int posX, int posY, RECT rect, unsigned char character, unsigned char attribute)
 {
-	*((unsigned char far *)destination + ((posX + rect.x) * 2) + ((posY + rect.y) * (rect.size_x * 2))    )  = character;
-	*((unsigned char far *)destination + ((posX + rect.x) * 2) + ((posY + rect.y) * (rect.size_x * 2)) + 1)  = attribute;
+	set_char_on_rect_at(destination, posX, posY, rect, character);
+	set_attribute_on_rect_at(destination, posX, posY, rect, attribute);
 }
 
 void draw_char_on_page(int posX, int posY, unsigned char character, unsigned char attribute, int page)
@@ -120,8 +132,20 @@ void draw_line_on_rect_at(unsigned char far * destination, int start_x, int star
 	float delta_error;
 	float error;
 
+	int temp;
 	int y;
 	int x;
+
+	if(start_x > end_x)
+	{
+		temp = start_x;
+		start_x = end_x;
+		end_x = temp;
+
+		temp = start_y;
+		start_y = end_y;
+		end_y = temp;
+	}
 
 	delta_x = (float)(end_x - start_x);
 	delta_y = (float)(end_y - start_y);
@@ -136,10 +160,10 @@ void draw_line_on_rect_at(unsigned char far * destination, int start_x, int star
 
 		for(x = start_x; x <= end_x ; x++)
 		{
+			draw_char_on_rect_at(destination, x, y, rect, character, attribute);
 			error = error + delta_error;
 			if(error >= 0.5f)
 			{
-				draw_char_on_rect_at(destination, x, y, rect, character, attribute);
 				y = y + sign(delta_y);
 				error -= 1.0f;
 			}
@@ -155,10 +179,10 @@ void draw_line_on_rect_at(unsigned char far * destination, int start_x, int star
 
 		for(y = start_y; y < end_y; y++)
 		{
+			draw_char_on_rect_at(destination, x, y, rect, character, attribute);
 			error = error + delta_error;
 			if(error >= 0.5f)
 			{
-				draw_char_on_rect_at(destination, x, y, rect, character, attribute);
 				x = x + sign(delta_x);
 				error -= 1.0f;
 			}
@@ -179,14 +203,14 @@ void print_string_on_rect_at(unsigned char far * destination, int posX, int posY
 	}
 }
 
-unsigned char get_character(int posX, int posY, int page)
+unsigned char get_character_on_rect_at(unsigned char far * source, int posX, int posY, RECT rect)
 {
-	return *((unsigned char far *)PAGE_0 + (posX * 2) + (posY * (SCREEN_SIZE_X * 2)) + (page * PAGE_SIZE));
+	return *((unsigned char far *)source + (posX * 2) + (posY * (rect.size_x * 2)));
 }
 
-unsigned char get_attribute(int posX, int posY, int page)
+unsigned char get_attribute_on_rect_at(unsigned char far * source, int posX, int posY, RECT rect)
 {
-	return *((unsigned char far *)PAGE_0 + (posX * 2) + (posY * (SCREEN_SIZE_X * 2)) + (page * PAGE_SIZE) + 1);
+	return *((unsigned char far *)source + (posX * 2) + (posY * (rect.size_x * 2)) + 1);
 }
 
 void copy_area_from_image(	unsigned char far * source, unsigned char far * destination, 

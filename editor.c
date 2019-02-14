@@ -11,6 +11,19 @@
 
 #define MODE_DRAWING 0
 #define MODE_LINE 1
+#define MODE_PAINT_BACK 2
+#define MODE_PAINT_FORE 3
+#define MODE_CHANGE_CHAR 4
+
+#define WINDOW_TOP_RIGHT 0xBB
+#define WINDOW_BOT_RIGHT 0xBC
+#define WINDOW_BOT_LEFT 0xC8
+#define WINDOW_TOP_LEFT 0xC9
+
+#define WINDOW_HOR 0xCD
+#define WINDOW_VER 0xBA
+
+#define BLOCK 0xDB
 
 #define VIEW_CANVAS 0
 #define VIEW_BRUSH_SELECT 1
@@ -54,6 +67,76 @@ unsigned char get_selected_attribute()
 	return (selected_fore_color | (selected_back_color << 4) | (selected_blink << 7));
 }
 
+void draw_shadow(int screen_pos_x, int screen_pos_y)
+{
+	unsigned char buffer;
+
+	buffer = 	get_attribute_on_rect_at( 	PAGE_1,
+											screen_pos_x, screen_pos_y,
+											rect(0,0, SCREEN_SIZE_X, SCREEN_SIZE_Y));
+
+	if(buffer & 0x08)
+	{
+		buffer &= 0x87;
+	}
+	else
+	{
+		buffer &= 0x80;
+	}
+
+	set_attribute_on_rect_at( 	PAGE_1,
+								screen_pos_x, screen_pos_y,
+								rect(0,0, SCREEN_SIZE_X, SCREEN_SIZE_Y),
+								buffer);
+}
+
+void draw_window(RECT bounds, unsigned char border_color_fore, unsigned char border_color_back, unsigned char fill_color)
+{
+	int i, j;
+
+	draw_char_on_page(bounds.x + bounds.size_x-1, 	bounds.y,				  	WINDOW_TOP_RIGHT,	border_color_fore | (border_color_back<<4), 1);
+	draw_char_on_page(bounds.x + bounds.size_x-1, 	bounds.y + bounds.size_y-1, WINDOW_BOT_RIGHT,	border_color_fore | (border_color_back<<4), 1);
+	draw_char_on_page(bounds.x, 					bounds.y + bounds.size_y-1, WINDOW_BOT_LEFT,	border_color_fore | (border_color_back<<4), 1);
+	draw_char_on_page(bounds.x, 			 	   	bounds.y, 				  	WINDOW_TOP_LEFT,	border_color_fore | (border_color_back<<4), 1);
+
+	for(i = bounds.x + 1; i < bounds.x + bounds.size_x - 1; i++)
+	{
+		draw_char_on_page(i, bounds.y,						WINDOW_HOR,	border_color_fore | (border_color_back<<4), 1);
+		draw_char_on_page(i, bounds.y + bounds.size_y - 1,	WINDOW_HOR,	border_color_fore | (border_color_back<<4), 1);
+	}
+
+	for(i = bounds.y + 1; i < bounds.y + bounds.size_y - 1; i++)
+	{
+		draw_char_on_page(bounds.x, 					i,	WINDOW_VER,	border_color_fore | (border_color_back<<4), 1);
+		draw_char_on_page(bounds.x + bounds.size_x -1, 	i,	WINDOW_VER,	border_color_fore | (border_color_back<<4), 1);
+	}
+
+	for(i = bounds.x + 1; i < bounds.x + bounds.size_x - 1; i++)
+	{
+		for(j = bounds.y + 1; j < bounds.y +bounds.size_y - 1; j++)
+		{
+			draw_char_on_page(i,  j,	BLOCK,	fill_color, 1);
+		}
+	}
+}
+
+void draw_window_shadowed(RECT bounds, unsigned char border_color_fore, unsigned char border_color_back, unsigned char fill_color)
+{
+	int i;
+
+	draw_window(bounds, border_color_fore, border_color_back, fill_color);
+
+	for(i = bounds.x + 1; i < bounds.x + bounds.size_x + 1; i++)
+	{
+		draw_shadow(i, bounds.y + bounds.size_y);
+	}
+
+	for(i = bounds.y + 1; i < bounds.y + bounds.size_y; i++)
+	{
+		draw_shadow(bounds.x + bounds.size_x, i);
+	}
+}
+
 void blink_cursor()
 {
 	blink_counter = clock() - last_blink_clock;
@@ -89,6 +172,8 @@ void draw_canvas()
 						 image_source,
 						 area_dest,
 						 image_dest);
+
+	draw_window_shadowed(rect(2,2,20,10), 14, 6, 3);
 
 	blink_cursor();
 	copy_page(1, 0);
@@ -179,6 +264,8 @@ void change_mode(int mode)
 
 void cursor_action()
 {
+	unsigned char buffer;
+
 	if(current_view == VIEW_CANVAS)
 	{
 		if(current_mode == MODE_DRAWING)
@@ -187,6 +274,44 @@ void cursor_action()
 									viewport_x + cursor_x, viewport_y + cursor_y,
 									rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y),
 									selected_char, get_selected_attribute());
+		}
+
+		if(current_mode == MODE_PAINT_FORE)
+		{
+			buffer = get_attribute_on_rect_at( 	canvas,
+												viewport_x + cursor_x, viewport_y + cursor_y,
+												rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y));
+
+			buffer &= 0xF0;
+			buffer |= selected_fore_color;
+
+			set_attribute_on_rect_at( 	canvas,
+										viewport_x + cursor_x, viewport_y + cursor_y,
+										rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y),
+										buffer);
+		}
+
+		if(current_mode == MODE_PAINT_BACK)
+		{
+			buffer = get_attribute_on_rect_at( 	canvas,
+												viewport_x + cursor_x, viewport_y + cursor_y,
+												rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y));
+
+			buffer &= 0x8F;
+			buffer |= (selected_back_color << 4);
+
+			set_attribute_on_rect_at( 	canvas,
+										viewport_x + cursor_x, viewport_y + cursor_y,
+										rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y),
+										buffer);
+		}
+
+		if(current_mode == MODE_CHANGE_CHAR)
+		{
+			set_char_on_rect_at( 		canvas,
+										viewport_x + cursor_x, viewport_y + cursor_y,
+										rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y),
+										selected_char);
 		}
 
 		if(current_mode == MODE_LINE)
@@ -325,6 +450,21 @@ void handle_input()
 	if(Get_Key(MAKE_CTRL) && Get_Key_Once(MAKE_D))
 	{
 		change_mode(MODE_DRAWING);
+	}
+
+	if(Get_Key(MAKE_CTRL) && Get_Key_Once(MAKE_F))
+	{
+		change_mode(MODE_PAINT_FORE);
+	}
+
+	if(Get_Key(MAKE_CTRL) && Get_Key_Once(MAKE_B))
+	{
+		change_mode(MODE_PAINT_BACK);
+	}
+
+	if(Get_Key(MAKE_CTRL) && Get_Key_Once(MAKE_H))
+	{
+		change_mode(MODE_CHANGE_CHAR);
 	}
 
 	if(Get_Key_Once(MAKE_ESC))
