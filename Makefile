@@ -7,7 +7,7 @@ GAMENAME = 437ART
 CC = tcc
 RM = rm -f
 
-INCLUDE = include;D:\tc\include
+INCLUDE = include;D:\tc\include;.
 LIB = D:\tc\lib
 CCFLAGS =
 
