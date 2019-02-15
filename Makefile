@@ -14,7 +14,7 @@ CCFLAGS =
 all: $(GAMENAME).exe
 
 $(GAMENAME).exe:
-	$(CC) "-I$(INCLUDE) -L$(LIB) -e$(GAMENAME) $(CCFLAGS)" *.c 
+	$(CC) "-I$(INCLUDE) -L$(LIB) -e$(GAMENAME) $(CCFLAGS) *.c"  
 	
 run:
 	dosbox -conf ~/.dosbox/tcc.conf -c "$(GAMENAME)"
