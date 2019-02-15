@@ -14,6 +14,8 @@ LIST * active_buttons;
 int CURSOR_ENABLED = 1;
 int CURSOR_MOVABLE = 1;
 
+extern unsigned char far * canvas;
+
 int EDGE_EVENT_ENABLED = 1;
 
 int current_mode = MODE_DRAWING;
@@ -178,7 +180,7 @@ void cursor_action()
 	{
 		if(get_current_mode() == MODE_DRAWING)
 		{
-			draw_char_on_rect_at(	get_canvas_address(),
+			draw_char_on_rect_at(	canvas,
 									get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
 									rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y),
 									selected_char, get_selected_attribute());
@@ -186,14 +188,14 @@ void cursor_action()
 
 		if(get_current_mode() == MODE_PAINT_FORE)
 		{
-			buffer = get_attribute_on_rect_at( 	get_canvas_address(),
+			buffer = get_attribute_on_rect_at( 	canvas,
 												get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
 												rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y));
 
 			buffer &= 0xF0;
 			buffer |= selected_fore_color;
 
-			set_attribute_on_rect_at( 	get_canvas_address(),
+			set_attribute_on_rect_at( 	canvas,
 										get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
 										rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y),
 										buffer);
@@ -201,14 +203,14 @@ void cursor_action()
 
 		if(get_current_mode() == MODE_PAINT_BACK)
 		{
-			buffer = get_attribute_on_rect_at( 	get_canvas_address(),
+			buffer = get_attribute_on_rect_at( 	canvas,
 												get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
 												rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y));
 
 			buffer &= 0x8F;
 			buffer |= (selected_back_color << 4);
 
-			set_attribute_on_rect_at( 	get_canvas_address(),
+			set_attribute_on_rect_at( 	canvas,
 										get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
 										rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y),
 										buffer);
@@ -216,7 +218,7 @@ void cursor_action()
 
 		if(get_current_mode() == MODE_CHANGE_CHAR)
 		{
-			set_char_on_rect_at( 		get_canvas_address(),
+			set_char_on_rect_at( 		canvas,
 										get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
 										rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y),
 										selected_char);
@@ -232,7 +234,7 @@ void cursor_action()
 			}
 			else
 			{
-				draw_line_on_rect_at(	get_canvas_address(), 
+				draw_line_on_rect_at(	canvas, 
 										line_start_x, line_start_y, 
 										get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
 										rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y), 
@@ -321,6 +323,12 @@ void input_canvas_view()
 	if(Get_Key_Once(MAKE_F1))
 	{
 		set_current_view(VIEW_BRUSH_SELECT);
+	}
+
+	if(Get_Key(MAKE_CTRL) && Get_Key_Once(MAKE_N))
+	{
+		show_dialog_yn(	rect(SCREEN_SIZE_X/2-10, SCREEN_SIZE_X/2+10, SCREEN_SIZE_Y/2-3, SCREEN_SIZE_Y/2+3),
+						"Are you sure you want to clear the canvas?", clear_canvas, NULL);
 	}
 
 	input_cursor();

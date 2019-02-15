@@ -6,11 +6,6 @@
 
 unsigned char far * canvas;
 
-unsigned char far * get_canvas_address()
-{
-	return (unsigned char far *)canvas;
-}
-
 void init_canvas()
 {
 	int i;
@@ -19,6 +14,16 @@ void init_canvas()
 
 	for(i = 0; i < CANVAS_SIZE_X*CANVAS_SIZE_Y*2; i++)
 	{
-		*(canvas + i) = 0xff;
+		*(canvas + i) = 0x00;
+	}
+}
+
+void clear_canvas()
+{
+	int i;
+
+	for(i = 0; i < CANVAS_SIZE_X*CANVAS_SIZE_Y*2; i++)
+	{
+		*(canvas + i) = 0x00;
 	}
 }

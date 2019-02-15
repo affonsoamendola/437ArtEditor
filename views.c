@@ -11,6 +11,8 @@ int viewport_y = 0;
 
 extern unsigned char selected_char; 
 
+extern unsigned char far * canvas;
+
 extern unsigned char selected_fore_color;
 extern unsigned char selected_back_color;
 extern unsigned char selected_blink;
@@ -56,16 +58,20 @@ void view_canvas()
 	area_dest = rect( 0, 0, SCREEN_SIZE_X, SCREEN_SIZE_Y);
 	image_dest = rect( 0, 0, SCREEN_SIZE_X, SCREEN_SIZE_Y);
 
-	copy_area_from_image(get_canvas_address(), PAGE_1,
+	copy_area_from_image(canvas, PAGE_1,
 						 area_source,
 						 image_source,
 						 area_dest,
 						 image_dest);
-
-	draw_window_shadowed(rect(10,10, 10, 10), 10, 5, 5);
+	show_ui();
 
 	blink_cursor();
 	copy_page(1, 0);
+}
+
+void show_ui()
+{
+	
 }
 
 void view_brush_select()
@@ -112,18 +118,6 @@ void view_brush_select()
 
 	blink_cursor();
 	copy_page(1, 0);
-}
-
-void view_ui()
-{
-	if(UI_SHOW_EXIT)
-	{
-		draw_window_shadowed(rect(SCREEN_SIZE_X/2 - 20, SCREEN_SIZE_Y - 10, 40, 20), current_border_color_fore, current_border_color_back, current_border_color_back);
-	}
-}
-
-void view_ui_peek()
-{
 }
 
 void move_viewport(int delta_x, int delta_y)

@@ -15,6 +15,59 @@ int blink_state = 0;
 int current_border_color_fore = 0x0E;
 int current_border_color_back = 0x01;
 
+LIST * active_windows;
+
+LIST * get_active_windows()
+{
+	return active_windows();
+}
+
+WINDOW * window(RECT rect, int color_border_fore, int color_border_back, int color_fill)
+{
+	WINDOW * new_window;
+
+	new_window->bounds = rect;
+	new_window->color_border_fore = color_border_fore;
+	new_window->color_border_back = color_border_back;
+	new_window->color_fill 		  = color_fill;
+	new_window->button_list = create_list();
+	new_window->textbox_list = create_list();
+
+	return new_window;
+}
+
+void add_button_to_window(BUTTON * button, WINDOW * window)
+{
+
+	append_list(window->button_list, button);
+}
+
+void add_textbox_to_window(TEXTBOX * textbox, WINDOW * window)
+{
+
+	append_list(window->textbox_list, textbox);
+}
+
+BUTTON * button(RECT active_area, void (* on_click)())
+{
+	BUTTON * new_button;
+
+	new_button->active_area = active_area;
+	new_button->on_click = on_click;
+
+	return new_button;
+}
+
+TEXTBOX * textbox(RECT bounds, char * text)
+{
+	TEXTBOX * new_textbox;
+
+	new_textbox->bounds = bounds;
+	new_textbox->text = text;
+
+	return new_textbox;
+}
+
 void draw_shadow(int screen_pos_x, int screen_pos_y)
 {
 	unsigned char buffer;
@@ -38,50 +91,50 @@ void draw_shadow(int screen_pos_x, int screen_pos_y)
 								buffer);
 }
 
-void draw_window(RECT bounds, unsigned char border_color_fore, unsigned char border_color_back, unsigned char fill_color)
+void draw_window(WINDOW * window)
 {
 	int i, j;
 
-	draw_char_on_page(bounds.x + bounds.size_x-1, 	bounds.y,				  	WINDOW_TOP_RIGHT,	border_color_fore | (border_color_back<<4), 1);
-	draw_char_on_page(bounds.x + bounds.size_x-1, 	bounds.y + bounds.size_y-1, WINDOW_BOT_RIGHT,	border_color_fore | (border_color_back<<4), 1);
-	draw_char_on_page(bounds.x, 					bounds.y + bounds.size_y-1, WINDOW_BOT_LEFT,	border_color_fore | (border_color_back<<4), 1);
-	draw_char_on_page(bounds.x, 			 	   	bounds.y, 				  	WINDOW_TOP_LEFT,	border_color_fore | (border_color_back<<4), 1);
+	draw_char_on_page(window->bounds.x + window->bounds.size_x-1, 	window->bounds.y,				  			WINDOW_TOP_RIGHT,	window->border_color_fore | (window->border_color_back<<4), 1);
+	draw_char_on_page(window->bounds.x + window->bounds.size_x-1, 	window->bounds.y + window->bounds.size_y-1, WINDOW_BOT_RIGHT,	window->border_color_fore | (window->border_color_back<<4), 1);
+	draw_char_on_page(window->bounds.x, 							window->bounds.y + window->bounds.size_y-1, WINDOW_BOT_LEFT,	window->border_color_fore | (window->border_color_back<<4), 1);
+	draw_char_on_page(window->bounds.x, 			 	   			window->bounds.y, 				  			WINDOW_TOP_LEFT,	window->border_color_fore | (window->border_color_back<<4), 1);
 
-	for(i = bounds.x + 1; i < bounds.x + bounds.size_x - 1; i++)
+	for(i = window->bounds.x + 1; i < window->bounds.x + window->bounds.size_x - 1; i++)
 	{
-		draw_char_on_page(i, bounds.y,						WINDOW_HOR,	border_color_fore | (border_color_back<<4), 1);
-		draw_char_on_page(i, bounds.y + bounds.size_y - 1,	WINDOW_HOR,	border_color_fore | (border_color_back<<4), 1);
+		draw_char_on_page(i, window->bounds.y,								WINDOW_HOR,	window->border_color_fore | (window->border_color_back<<4), 1);
+		draw_char_on_page(i, window->bounds.y + window->bounds.size_y - 1,	WINDOW_HOR,	window->border_color_fore | (window->border_color_back<<4), 1);
 	}
 
-	for(i = bounds.y + 1; i < bounds.y + bounds.size_y - 1; i++)
+	for(i = window->bounds.y + 1; i < window->bounds.y + window->bounds.size_y - 1; i++)
 	{
-		draw_char_on_page(bounds.x, 					i,	WINDOW_VER,	border_color_fore | (border_color_back<<4), 1);
-		draw_char_on_page(bounds.x + bounds.size_x -1, 	i,	WINDOW_VER,	border_color_fore | (border_color_back<<4), 1);
+		draw_char_on_page(window->bounds.x, 							i,	WINDOW_VER,	window->border_color_fore | (window->border_color_back<<4), 1);
+		draw_char_on_page(window->bounds.x + window->bounds.size_x -1, 	i,	WINDOW_VER, window->border_color_fore | (window->border_color_back<<4), 1);
 	}
 
-	for(i = bounds.x + 1; i < bounds.x + bounds.size_x - 1; i++)
+	for(i = window->bounds.x + 1; i < window->bounds.x + window->bounds.size_x - 1; i++)
 	{
-		for(j = bounds.y + 1; j < bounds.y +bounds.size_y - 1; j++)
+		for(j = window->bounds.y + 1; j < window->bounds.y + window->bounds.size_y - 1; j++)
 		{
-			draw_char_on_page(i,  j,	BLOCK,	fill_color, 1);
+			draw_char_on_page(i,  j,	BLOCK,	window->fill_color, 1);
 		}
 	}
 }
 
-void draw_window_shadowed(RECT bounds, unsigned char border_color_fore, unsigned char border_color_back, unsigned char fill_color)
+void draw_window_shadowed(WINDOW * window)
 {
 	int i;
 
-	draw_window(bounds, border_color_fore, border_color_back, fill_color);
+	draw_window(window);
 
-	for(i = bounds.x + 1; i < bounds.x + bounds.size_x + 1; i++)
+	for(i = window->bounds.x + 1; i < window->bounds.x + window->bounds.size_x + 1; i++)
 	{
-		draw_shadow(i, bounds.y + bounds.size_y);
+		draw_shadow(i, window->bounds.y + window->bounds.size_y);
 	}
 
-	for(i = bounds.y + 1; i < bounds.y + bounds.size_y; i++)
+	for(i = window->bounds.y + 1; i < window->bounds.y + window->bounds.size_y; i++)
 	{
-		draw_shadow(bounds.x + bounds.size_x, i);
+		draw_shadow(window->bounds.x + window->bounds.size_x, i);
 	}
 }
 
