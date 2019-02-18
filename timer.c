@@ -1,5 +1,8 @@
-
+#include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
+
+#include "timer.h"
 
 clock_t frame_start_clock = 0;
 

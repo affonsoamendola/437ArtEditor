@@ -1,3 +1,10 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+
+#include "init.h"
+#include "cga.h"
+#include "canvas.h"
 
 void init_sequence()
 {

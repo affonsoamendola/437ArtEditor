@@ -20,8 +20,16 @@ void Keyboard_Disable_Till_Up_Event()
 
 void Sleep_Key()
 {
-	while(!Get_Any_Key())
+	int start_keys_active;
+
+	start_keys_active = keys_active;
+
+	while(keys_active <= start_keys_active)
 	{
+		if(keys_active < start_keys_active)
+		{
+			start_keys_active = keys_active;
+		}
 	}
 }
 
@@ -34,6 +42,11 @@ void Delay_Key(int msecs)
 	{
 		time_elapsed = clock()-time;
 	}
+}
+
+int Get_Active_Keys()
+{
+	return keys_active;
 }
 
 int Get_Any_Key()

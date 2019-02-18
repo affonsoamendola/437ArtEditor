@@ -1,20 +1,15 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "cga.h"
-#include "keyb.h"
-#include "list.h"
 #include "input.h"
 #include "views.h"
+#include "cga.h"
+#include "ui_elem.h"
 #include "canvas.h"
-
-LIST * active_buttons;
+#include "keyb.h"
 
 int CURSOR_ENABLED = 1;
 int CURSOR_MOVABLE = 1;
-
-extern unsigned char far * canvas;
 
 int EDGE_EVENT_ENABLED = 1;
 
@@ -32,6 +27,46 @@ unsigned char selected_blink 	  = 0x00;
 int line_start_x = 0;
 int line_start_y = 0;
 int line_start_selected = 0;
+
+LIST * hotkeys_list;
+
+typedef struct HOTKEY_
+{
+	int key_1 = -1;
+	int key_2 = -1;
+	int key_3 = -1;
+
+	int enabled = 0;
+
+	void (* hotkey_action)(void *);
+}
+HOTKEY;
+
+void set_all_hotkeys_enabled(int value)
+{
+	for(i = 0; i < len_list(hotkeys_list); i++)
+	{
+		get_list_at(hotkeys_list, i).enabled = value;
+	}
+}
+
+void set_hotkey_enabled(int value, int hotkey_index)
+{
+	get_list_at(hotkeys_list, hotkey_index).enabled = value;
+}
+
+int new_hotkey(int key_1, int key_2, int key_3, void (* hotkey_action)(void *))
+{
+	HOTKEY hotkey;
+
+	hotkey.key_1 = key_1;
+	hotkey.key_2 = key_2;
+	hotkey.key_3 = key_3;
+
+	hotkey.enabled = 1;
+
+	hotkey.hotkey_action = hotkey_action;
+}
 
 int get_current_mode()
 {
@@ -113,49 +148,6 @@ void move_cursor(int delta_x, int delta_y)
 	}
 }
 
-int inside_rect(int x, int y, RECT rect)
-{
-	if(	x >= rect.x && x < rect.x + rect.size_x &&
-		y >= rect.y && y < rect.y + rect.size_y)
-	{
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
-}
-
-void brush_select_screen_cursor_action()
-{
-	int linear_cursor_position;
-
-	if(cursor_y >= 0 && cursor_y < 4)
-	{
-		linear_cursor_position = cursor_x + cursor_y*SCREEN_SIZE_X;
-
-		if(linear_cursor_position >= 0 && linear_cursor_position < 256)
-		{
-			selected_char = linear_cursor_position;
-		}
-	}
-
-	if(cursor_y == 7)
-	{
-		if(cursor_x >= 0 && cursor_x < 16)
-		{
-			selected_fore_color = cursor_x;
-		}
-	}
-	else if(cursor_y == 9)
-	{
-		if(cursor_x >= 0 && cursor_x < 8)
-		{
-			selected_back_color = cursor_x;
-		}
-	}
-}
-
 void change_mode(int mode)
 {
 	line_start_selected = 0;
@@ -166,13 +158,23 @@ void change_mode(int mode)
 void cursor_action()
 {
 	unsigned char buffer;
-	int i;
+	int i, j;
 
-	for(i = 0; i < len_list(active_buttons); i++)
+	WINDOW * current_window;
+	BUTTON * current_button;
+
+	for(i = 0; i < get_active_windows_amount(); i++)
 	{
-		if(inside_rect(cursor_x, cursor_y, ((BUTTON *)get_list_at(active_buttons, i))->clickable_area))
+		current_window = (WINDOW *)get_list_at((LIST *)get_active_windows(), i);
+
+		for(j = 0; j < len_list(current_window->button_list); j++)
 		{
-			((BUTTON *)get_list_at(active_buttons, i))->on_click();
+			current_button = (BUTTON *)get_list_at(current_window->button_list, j);
+
+			if(inside_rect(cursor_x, cursor_y, current_button->on_click_area))
+			{
+				current_button->on_click();
+			}
 		}
 	}
 
@@ -180,7 +182,7 @@ void cursor_action()
 	{
 		if(get_current_mode() == MODE_DRAWING)
 		{
-			draw_char_on_rect_at(	canvas,
+			draw_char_on_rect_at(	get_canvas_address(),
 									get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
 									rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y),
 									selected_char, get_selected_attribute());
@@ -188,14 +190,14 @@ void cursor_action()
 
 		if(get_current_mode() == MODE_PAINT_FORE)
 		{
-			buffer = get_attribute_on_rect_at( 	canvas,
+			buffer = get_attribute_on_rect_at( 	get_canvas_address(),
 												get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
 												rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y));
 
 			buffer &= 0xF0;
 			buffer |= selected_fore_color;
 
-			set_attribute_on_rect_at( 	canvas,
+			set_attribute_on_rect_at( 	get_canvas_address(),
 										get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
 										rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y),
 										buffer);
@@ -203,14 +205,14 @@ void cursor_action()
 
 		if(get_current_mode() == MODE_PAINT_BACK)
 		{
-			buffer = get_attribute_on_rect_at( 	canvas,
+			buffer = get_attribute_on_rect_at( 	get_canvas_address(),
 												get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
 												rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y));
 
 			buffer &= 0x8F;
 			buffer |= (selected_back_color << 4);
 
-			set_attribute_on_rect_at( 	canvas,
+			set_attribute_on_rect_at( 	get_canvas_address(),
 										get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
 										rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y),
 										buffer);
@@ -218,7 +220,7 @@ void cursor_action()
 
 		if(get_current_mode() == MODE_CHANGE_CHAR)
 		{
-			set_char_on_rect_at( 		canvas,
+			set_char_on_rect_at( 		get_canvas_address(),
 										get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
 										rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y),
 										selected_char);
@@ -234,7 +236,7 @@ void cursor_action()
 			}
 			else
 			{
-				draw_line_on_rect_at(	canvas, 
+				draw_line_on_rect_at(	get_canvas_address(), 
 										line_start_x, line_start_y, 
 										get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
 										rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y), 
@@ -285,14 +287,6 @@ void input_cursor()
 	}
 }
 
-void input_brush_select()
-{
-	if(Get_Key_Once(MAKE_F1) | Get_Key_Once(MAKE_ESC))
-	{
-		set_current_view(VIEW_CANVAS);
-	}
-}
-
 void input_canvas_view()
 {
 	if(Get_Key(MAKE_CTRL) && Get_Key_Once(MAKE_L))
@@ -327,49 +321,18 @@ void input_canvas_view()
 
 	if(Get_Key(MAKE_CTRL) && Get_Key_Once(MAKE_N))
 	{
-		show_dialog_yn(	rect(SCREEN_SIZE_X/2-10, SCREEN_SIZE_X/2+10, SCREEN_SIZE_Y/2-3, SCREEN_SIZE_Y/2+3),
-						"Are you sure you want to clear the canvas?", clear_canvas, NULL);
+		
 	}
-
-	input_cursor();
-}
-
-void input_ui()
-{
-}
-
-void input_ui_peek()
-{
 }
 
 void handle_input()
 {
-	input_cursor();
 
-	if(get_current_view() == VIEW_CANVAS)
-	{
-		input_canvas_view();
-	}
-
-	if(get_current_view() == VIEW_BRUSH_SELECT)
-	{
-		input_brush_select();
-	}
-
-	if(get_current_view() == VIEW_UI)
-	{
-		input_ui();
-	}
-
-	if(get_current_view() == VIEW_UI_PEEK)
-	{
-		input_ui_peek();
-	}
 }
 
-void init_ui()
+void init_input()
 {
-	active_buttons = create_list();
+	hotkeys_list = create_list();
 }
 
 

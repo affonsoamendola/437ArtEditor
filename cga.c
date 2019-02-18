@@ -6,18 +6,6 @@
 
 int shown_page = 0;
 
-RECT rect(int x, int y, int size_x, int size_y)
-{
-	RECT rectangle;
-
-	rectangle.x = x;
-	rectangle.y = y;
-	rectangle.size_x = size_x;
-	rectangle.size_y = size_y;
-
-	return rectangle;
-}
-
 int sign(int value)
 {
 	if(value >= 0)
@@ -29,7 +17,6 @@ int sign(int value)
 		return -1;
 	}
 }
-
 
 unsigned char far * get_page_address(int page_number)
 {

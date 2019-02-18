@@ -1,10 +1,14 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "canvas.h"
 
-unsigned char far * canvas;
+unsigned char * canvas;
+
+unsigned char * get_canvas_address()
+{
+	return canvas;
+}
 
 void init_canvas()
 {

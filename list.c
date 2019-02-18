@@ -1,4 +1,5 @@
-
+#include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 
 #include "list.h"
@@ -20,6 +21,7 @@ LIST * create_list()
 
 	list_head->prev_element = list_head;
 	list_head->next_element = list_head;
+	list_head->content = 0;
 
 	return list_head;
 }

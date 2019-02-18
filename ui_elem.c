@@ -2,10 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "cga.h"
 #include "ui_elem.h"
-
-#define BLINK_RATE 1.0f
+#include "cga.h"
 
 int last_blink_clock = 0;
 
@@ -19,17 +17,25 @@ LIST * active_windows;
 
 LIST * get_active_windows()
 {
-	return active_windows();
+	return (LIST *)active_windows;
 }
 
-WINDOW * window(RECT rect, int color_border_fore, int color_border_back, int color_fill)
+int get_active_windows_amount()
+{
+	
+	return len_list(active_windows);
+}
+
+WINDOW * window(RECT rect, int border_color_fore, int border_color_back, int fill_color)
 {
 	WINDOW * new_window;
 
+	new_window = (WINDOW *)malloc(sizeof(WINDOW));
+
 	new_window->bounds = rect;
-	new_window->color_border_fore = color_border_fore;
-	new_window->color_border_back = color_border_back;
-	new_window->color_fill 		  = color_fill;
+	new_window->border_color_fore = border_color_fore;
+	new_window->border_color_back = border_color_back;
+	new_window->fill_color		  = fill_color;
 	new_window->button_list = create_list();
 	new_window->textbox_list = create_list();
 
@@ -38,31 +44,41 @@ WINDOW * window(RECT rect, int color_border_fore, int color_border_back, int col
 
 void add_button_to_window(BUTTON * button, WINDOW * window)
 {
+	LIST * button_list;
 
-	append_list(window->button_list, button);
+	button_list = window->button_list;
+
+	append_list(button_list, button);
 }
 
 void add_textbox_to_window(TEXTBOX * textbox, WINDOW * window)
 {
+	LIST * textbox_list;
 
-	append_list(window->textbox_list, textbox);
+	textbox_list = window->textbox_list;
+
+	append_list(textbox_list, textbox);
 }
 
-BUTTON * button(RECT active_area, void (* on_click)())
+BUTTON * button(RECT on_click_area, void (* on_click)())
 {
 	BUTTON * new_button;
 
-	new_button->active_area = active_area;
+	new_button = (BUTTON *)malloc(sizeof(BUTTON));
+
+	new_button->on_click_area = on_click_area;
 	new_button->on_click = on_click;
 
 	return new_button;
 }
 
-TEXTBOX * textbox(RECT bounds, char * text)
+TEXTBOX * textbox(RECT text_area, char * text)
 {
 	TEXTBOX * new_textbox;
 
-	new_textbox->bounds = bounds;
+	new_textbox =(TEXTBOX *)malloc(sizeof(TEXTBOX));
+
+	new_textbox->text_area = text_area;
 	new_textbox->text = text;
 
 	return new_textbox;
@@ -72,7 +88,7 @@ void draw_shadow(int screen_pos_x, int screen_pos_y)
 {
 	unsigned char buffer;
 
-	buffer = 	get_attribute_on_rect_at( 	PAGE_1,
+	buffer = 	get_attribute_on_rect_at( 	get_page_address(1),
 											screen_pos_x, screen_pos_y,
 											rect(0,0, SCREEN_SIZE_X, SCREEN_SIZE_Y));
 
@@ -85,7 +101,7 @@ void draw_shadow(int screen_pos_x, int screen_pos_y)
 		buffer &= 0x80;
 	}
 
-	set_attribute_on_rect_at( 	PAGE_1,
+	set_attribute_on_rect_at( 	get_page_address(1),
 								screen_pos_x, screen_pos_y,
 								rect(0,0, SCREEN_SIZE_X, SCREEN_SIZE_Y),
 								buffer);
@@ -152,4 +168,10 @@ void blink_cursor()
 	{
 		draw_char_on_page(get_cursor_x(), get_cursor_y(), (unsigned char)219, 0x7F, 1);
 	}
+}
+
+void init_ui()
+{
+
+	active_windows = create_list();
 }

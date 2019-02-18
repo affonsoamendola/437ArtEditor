@@ -3,6 +3,9 @@
 #include <stdlib.h>
 
 #include "views.h"
+#include "list.h"
+#include "geometry.h"
+#include "ui_elem.h"
 #include "cga.h"
 #include "canvas.h"
 
@@ -10,8 +13,6 @@ int viewport_x = 0;
 int viewport_y = 0;
 
 extern unsigned char selected_char; 
-
-extern unsigned char far * canvas;
 
 extern unsigned char selected_fore_color;
 extern unsigned char selected_back_color;
@@ -44,6 +45,20 @@ void set_current_view(int view)
 	current_view = view;
 }
 
+void show_ui()
+{
+	int i;
+
+	LIST * active_windows;
+
+	active_windows = get_active_windows();
+	
+	for(i = 0; i < len_list(active_windows); i++)
+	{
+		draw_window_shadowed(get_list_at(active_windows, i));
+	}
+}
+
 void view_canvas()
 {
 	RECT area_source;
@@ -58,63 +73,11 @@ void view_canvas()
 	area_dest = rect( 0, 0, SCREEN_SIZE_X, SCREEN_SIZE_Y);
 	image_dest = rect( 0, 0, SCREEN_SIZE_X, SCREEN_SIZE_Y);
 
-	copy_area_from_image(canvas, PAGE_1,
+	copy_area_from_image(get_canvas_address(), get_page_address(1),
 						 area_source,
 						 image_source,
 						 area_dest,
 						 image_dest);
-	show_ui();
-
-	blink_cursor();
-	copy_page(1, 0);
-}
-
-void show_ui()
-{
-	
-}
-
-void view_brush_select()
-{
-	int i;
-
-	fill_screen(0,0,1);
-
-	for(i = 0; i < 256; i++)
-	{
-		if(i != selected_char)
-		{
-			draw_char_on_page(i, 0, (unsigned char)i, get_selected_attribute(), 1);
-		}
-		else
-		{
-			draw_char_on_page(i, 0, (unsigned char)i, get_selected_attribute() ^ 0x80, 1);
-		}
-	}
-
-	for(i = 0; i < 16; i++)
-	{
-		if(i != selected_fore_color)
-		{
-			draw_char_on_page(i, 7, 219, i, 1);
-		}
-		else
-		{
-			draw_char_on_page(i, 7, 219, i ^ 0x80, 1);
-		}
-		
-	}
-	for(i = 0; i < 8; i++)
-	{
-		if(i != selected_back_color)
-		{
-			draw_char_on_page(i, 9, 219, i, 1);
-		}
-		else
-		{
-			draw_char_on_page(i, 9, 219, i ^ 0x80, 1);
-		}
-	}
 
 	blink_cursor();
 	copy_page(1, 0);
