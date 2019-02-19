@@ -32,10 +32,7 @@ LIST * hotkeys_list;
 
 typedef struct HOTKEY_
 {
-	int key_1 = -1;
-	int key_2 = -1;
-	int key_3 = -1;
-
+	int keys[] = {-1, -1, -1};
 	int enabled = 0;
 
 	void (* hotkey_action)(void *);
@@ -66,6 +63,8 @@ int new_hotkey(int key_1, int key_2, int key_3, void (* hotkey_action)(void *))
 	hotkey.enabled = 1;
 
 	hotkey.hotkey_action = hotkey_action;
+
+	append_list()
 }
 
 int get_current_mode()
@@ -327,7 +326,43 @@ void input_canvas_view()
 
 void handle_input()
 {
+	HOTKEY current_hotkey;
 
+	for(i = 0; i < len_list(hotkeys_list); i++)
+	{
+		current_hotkey = get_list_at(hotkeys_list, i);
+
+		combination_pressed = 1;
+
+		if( current_hotkey.enabled == 1)
+		{
+			for(j = 0; j < 3; j++)
+			{
+				if( current_hotkey.keys[j] != -1)
+				{
+					if(	current_hotkey.keys[j] == MAKE_LEFT_SHIFT || 
+						current_hotkey.keys[j] == MAKE_CTRL ||
+						current_hotkey.keys[j] == MAKE_ALT ||
+						current_hotkey.keys[j] == MAKE_RIGHT_SHIFT )
+					{
+						if(!Get_Key(current_hotkey.keys[j]))
+						{
+							combination_pressed = 0;
+						}
+					}
+					else
+					{
+						if(!Get_Key_Once(current_hotkey.keys[j]))
+						{
+							combination_pressed = 0;
+						}
+					}
+				}
+			}
+
+			current_hotkey.hotkey_action();
+		}
+	}
 }
 
 void init_input()
