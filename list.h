@@ -6,6 +6,7 @@ typedef struct LIST_ELEMENT_
 	void * content;
 	struct LIST_ELEMENT_ * next_element;
 	struct LIST_ELEMENT_ * prev_element; 
+	int index;
 } 
 LIST_ELEMENT;
 

@@ -3,8 +3,13 @@
 
 #include "ui_elem.h"
 #include "list.h"
+#include "cga.h"
 
-void show_dialog_yn(RECT bounds, char * text, void (* yes_button_action)(), void (* no_button_action)())
+void show_dialog_2b(RECT bounds, char * text, 
+					char * button0_text,
+					char * button1_text,
+					void (* button0_action)(), 
+					void (* button1_action)())
 {
 	WINDOW * dialog;
 
@@ -15,4 +20,14 @@ void show_dialog_yn(RECT bounds, char * text, void (* yes_button_action)(), void
 	add_button_to_window(	button(		rect(bounds.x + bounds.size_x - 4, 	bounds.y + bounds.size_y-2, 	3, 					1), 				no_button_action), dialog); 
 
 	append_list(get_active_windows(), dialog);
+}
+
+void show_confirm_clear()
+{
+	show_dialog_2b(	rect(SCREEN_SIZE_X/2-7, SCREEN_SIZE_Y/2-5, 14, 10), 
+					"Are you sure you want to clear the screen?",
+					"Yes",
+					"No",
+					clear_canvas,
+					)
 }

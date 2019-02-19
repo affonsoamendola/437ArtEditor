@@ -35,9 +35,12 @@ typedef struct HOTKEY_
 	int keys[] = {-1, -1, -1};
 	int enabled = 0;
 
-	void (* hotkey_action)(void *);
+	void (* hotkey_action)(int option);
+	int hotkey_action_option;
 }
 HOTKEY;
+
+typedef int HOTKEY_INDEX; 
 
 void set_all_hotkeys_enabled(int value)
 {
@@ -52,13 +55,13 @@ void set_hotkey_enabled(int value, int hotkey_index)
 	get_list_at(hotkeys_list, hotkey_index).enabled = value;
 }
 
-int new_hotkey(int key_1, int key_2, int key_3, void (* hotkey_action)(void *))
+HOTKEY_INDEX new_hotkey(int key_1, int key_2, int key_3, void (* hotkey_action)(int))
 {
 	HOTKEY hotkey;
 
-	hotkey.key_1 = key_1;
-	hotkey.key_2 = key_2;
-	hotkey.key_3 = key_3;
+	hotkey.keys[0] = key_1;
+	hotkey.keys[1] = key_2;
+	hotkey.keys[2] = key_3;
 
 	hotkey.enabled = 1;
 
@@ -360,7 +363,7 @@ void handle_input()
 				}
 			}
 
-			current_hotkey.hotkey_action();
+			current_hotkey.hotkey_action(current_hotkey.hotkey_action_option);
 		}
 	}
 }
@@ -368,6 +371,14 @@ void handle_input()
 void init_input()
 {
 	hotkeys_list = create_list();
+	
+	new_hotkey(MAKE_CTRL, MAKE_L, -1, change_mode, MODE_LINE);
+	new_hotkey(MAKE_CTRL, MAKE_D, -1, change_mode, MODE_DRAWING);
+	new_hotkey(MAKE_CTRL, MAKE_F, -1, change_mode, MODE_PAINT_FORE);
+	new_hotkey(MAKE_CTRL, MAKE_B, -1, change_mode, MODE_PAINT_BACK);
+	new_hotkey(MAKE_CTRL, MAKE_H, -1, change_mode, MODE_CHANGE_CHAR);
+	new_hotkey(MAKE_F1, -1, -1, show_brush_select, -1);
+	new_hotkey(MAKE_CTRL, MAKE_N, -1, show_confirm_clear, -1);
 }
 
 

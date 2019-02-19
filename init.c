@@ -12,4 +12,5 @@ void init_sequence()
 	set_graphics_mode();
 	init_canvas();
 	init_ui();
+	init_input();
 }

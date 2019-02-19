@@ -23,10 +23,12 @@ LIST * create_list()
 	list_head->next_element = list_head;
 	list_head->content = 0;
 
+	list_head->index = -1;
+
 	return list_head;
 }
 
-void append_list(LIST * target_list, void * content)
+int append_list(LIST * target_list, void * content)
 {
 	LIST_ELEMENT * last_list_element;
 	LIST_ELEMENT * new_list_element;
@@ -42,6 +44,10 @@ void append_list(LIST * target_list, void * content)
 	new_list_element->next_element = target_list;
 
 	new_list_element->content = content;
+
+	new_list_element->index = new_list_element->prev_element->index + 1;
+
+	return new_list_element->index;
 }
 
 void * get_list_at(LIST * source_list, int index)
@@ -80,6 +86,34 @@ void * get_list_at(LIST * source_list, int index)
 	}
 
 	return content;
+}
+
+void remove_list_at(LIST * source_list, int index)
+{
+	int i = -1;
+	LIST_ELEMENT * current_element;
+	LIST_ELEMENT * removed_element;
+
+	current_element = source_list;
+
+	while(current_element->index != index)
+	{
+		current_element = current_element->next_element;
+		i++;
+	}
+
+	current_element->prev_element->next_element = current_element->next_element;
+	removed_element = current_element;
+
+	do
+	{
+		current_element = current_element->next_element;
+		current_element->index = current_element->prev_element->index + 1;
+		i++;
+	}
+	while(current_element->next_element != source_list)
+
+	free(removed_element);
 }
 
 int len_list(LIST * source_list)
