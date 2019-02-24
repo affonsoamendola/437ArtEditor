@@ -4,6 +4,7 @@
 #include "ui_elem.h"
 #include "list.h"
 #include "cga.h"
+#include "canvas.h"
 
 void show_dialog_2b(RECT bounds, char * text, 
 					char * button0_text,
@@ -15,11 +16,9 @@ void show_dialog_2b(RECT bounds, char * text,
 
 	dialog = window(bounds, 0x07, 0x05, 0x05);
 
-	add_textbox_to_window(	textbox(	rect(bounds.x + 1, 					bounds.y + 1, 					bounds.size_x - 2, 	bounds.size_y - 4), text), dialog);
-	add_button_to_window(	button(		rect(bounds.x + 1, 					bounds.y + bounds.size_y-2, 	3, 					1), 				yes_button_action), dialog); 
-	add_button_to_window(	button(		rect(bounds.x + bounds.size_x - 4, 	bounds.y + bounds.size_y-2, 	3, 					1), 				no_button_action), dialog); 
-
-	append_list(get_active_windows(), dialog);
+	add_textbox_to_window(	textbox(	rect(bounds.x + 1, 					bounds.y + 1, 					bounds.size_x - 2, 	bounds.size_y - 4), text), 					dialog);
+	add_button_to_window(	button(		rect(bounds.x + 1, 					bounds.y + bounds.size_y-2, 	3, 					1), 				button0_action,	1),		dialog); 
+	add_button_to_window(	button(		rect(bounds.x + bounds.size_x - 4, 	bounds.y + bounds.size_y-2, 	3, 					1), 				button1_action,	1),		dialog); 
 }
 
 void show_confirm_clear()
@@ -29,5 +28,5 @@ void show_confirm_clear()
 					"Yes",
 					"No",
 					clear_canvas,
-					)
+					NULL);
 }

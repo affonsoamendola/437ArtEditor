@@ -3,11 +3,23 @@
 
 #include "geometry.h"
 
-#define MODE_DRAWING 0
-#define MODE_LINE 1
-#define MODE_PAINT_BACK 2
-#define MODE_PAINT_FORE 3
-#define MODE_CHANGE_CHAR 4
+#define MODE_DRAWING 1
+#define MODE_LINE 2
+#define MODE_PAINT_BACK 3
+#define MODE_PAINT_FORE 4
+#define MODE_CHANGE_CHAR 5
+
+typedef struct HOTKEY_
+{
+	int keys[3];
+	int enabled;
+
+	void (* hotkey_action)(int option);
+	int hotkey_action_option;
+}
+HOTKEY;
+
+typedef int HOTKEY_INDEX; 
 
 int get_current_mode();
 

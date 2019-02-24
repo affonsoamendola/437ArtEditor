@@ -88,6 +88,34 @@ void * get_list_at(LIST * source_list, int index)
 	return content;
 }
 
+
+int get_list_index(LIST * source_list, void * object)
+{
+	int i;
+
+	int index;
+
+	void * content;
+
+	LIST_ELEMENT * current_element;
+
+	current_element = source_list;
+
+	index = i;
+
+	for(i = -1; i < len_list(source_list); i++)
+	{
+		if(current_element->content == object)
+		{
+			index = i;
+			break;
+		}
+	}
+
+	return index;
+}
+
+
 void remove_list_at(LIST * source_list, int index)
 {
 	int i = -1;
@@ -111,9 +139,14 @@ void remove_list_at(LIST * source_list, int index)
 		current_element->index = current_element->prev_element->index + 1;
 		i++;
 	}
-	while(current_element->next_element != source_list)
+	while(current_element->next_element != source_list);
 
 	free(removed_element);
+}
+
+void remove_list(LIST * source_list, void * object)
+{
+	remove_list_at(source_list, get_list_index(source_list, object));
 }
 
 int len_list(LIST * source_list)

@@ -20,6 +20,7 @@ typedef struct BUTTON_
 {
 	RECT on_click_area;
 	void (* on_click)();
+	int close_window;
 }
 BUTTON;
 
@@ -51,7 +52,7 @@ void add_button_to_window(BUTTON * button, WINDOW * window);
 
 void add_textbox_to_window(TEXTBOX * textbox, WINDOW * window);
 
-BUTTON * button(RECT clickable_area, void (* on_click)());
+BUTTON * button(RECT on_click_area, void (* on_click)(), int close_window);
 
 TEXTBOX * textbox(RECT bounds, char * text);
 

@@ -7,6 +7,7 @@
 #include "ui_elem.h"
 #include "canvas.h"
 #include "keyb.h"
+#include "list.h"
 
 int CURSOR_ENABLED = 1;
 int CURSOR_MOVABLE = 1;
@@ -30,44 +31,37 @@ int line_start_selected = 0;
 
 LIST * hotkeys_list;
 
-typedef struct HOTKEY_
-{
-	int keys[] = {-1, -1, -1};
-	int enabled = 0;
-
-	void (* hotkey_action)(int option);
-	int hotkey_action_option;
-}
-HOTKEY;
-
-typedef int HOTKEY_INDEX; 
-
 void set_all_hotkeys_enabled(int value)
 {
+	int  i;
+
 	for(i = 0; i < len_list(hotkeys_list); i++)
 	{
-		get_list_at(hotkeys_list, i).enabled = value;
+		((HOTKEY *)get_list_at(hotkeys_list, i))->enabled = value;
 	}
 }
 
 void set_hotkey_enabled(int value, int hotkey_index)
 {
-	get_list_at(hotkeys_list, hotkey_index).enabled = value;
+	((HOTKEY *)get_list_at(hotkeys_list, hotkey_index))->enabled = value;
 }
 
-HOTKEY_INDEX new_hotkey(int key_1, int key_2, int key_3, void (* hotkey_action)(int))
+HOTKEY_INDEX new_hotkey(int key_1, int key_2, int key_3, void (* hotkey_action)(int), int hotkey_action_option)
 {
-	HOTKEY hotkey;
+	HOTKEY * hotkey;
 
-	hotkey.keys[0] = key_1;
-	hotkey.keys[1] = key_2;
-	hotkey.keys[2] = key_3;
+	hotkey = malloc(sizeof(HOTKEY));
 
-	hotkey.enabled = 1;
+	hotkey->keys[0] = key_1;
+	hotkey->keys[1] = key_2;
+	hotkey->keys[2] = key_3;
 
-	hotkey.hotkey_action = hotkey_action;
+	hotkey->enabled = 1;
 
-	append_list()
+	hotkey->hotkey_action = hotkey_action;
+	hotkey->hotkey_action_option = hotkey_action_option;
+
+	return append_list(hotkeys_list, hotkey);
 }
 
 int get_current_mode()
@@ -175,7 +169,15 @@ void cursor_action()
 
 			if(inside_rect(cursor_x, cursor_y, current_button->on_click_area))
 			{
-				current_button->on_click();
+				if(current_button->on_click != NULL)
+				{
+					current_button->on_click();
+				}
+
+				if(current_button->close_window)
+				{
+					close_window(current_window);
+				}
 			}
 		}
 	}
@@ -248,11 +250,12 @@ void cursor_action()
 			}
 		}
 	}
-	
+	/*
 	if(get_current_view() == VIEW_BRUSH_SELECT)
 	{
 		brush_select_screen_cursor_action();
 	}	
+	*/
 }
 
 void input_cursor()
@@ -289,73 +292,37 @@ void input_cursor()
 	}
 }
 
-void input_canvas_view()
-{
-	if(Get_Key(MAKE_CTRL) && Get_Key_Once(MAKE_L))
-	{
-		change_mode(MODE_LINE);
-	}
-
-	if(Get_Key(MAKE_CTRL) && Get_Key_Once(MAKE_D))
-	{
-		change_mode(MODE_DRAWING);
-	}
-
-	if(Get_Key(MAKE_CTRL) && Get_Key_Once(MAKE_F))
-	{
-		change_mode(MODE_PAINT_FORE);
-	}
-
-	if(Get_Key(MAKE_CTRL) && Get_Key_Once(MAKE_B))
-	{
-		change_mode(MODE_PAINT_BACK);
-	}
-
-	if(Get_Key(MAKE_CTRL) && Get_Key_Once(MAKE_H))
-	{
-		change_mode(MODE_CHANGE_CHAR);
-	}
-
-	if(Get_Key_Once(MAKE_F1))
-	{
-		set_current_view(VIEW_BRUSH_SELECT);
-	}
-
-	if(Get_Key(MAKE_CTRL) && Get_Key_Once(MAKE_N))
-	{
-		
-	}
-}
-
 void handle_input()
 {
-	HOTKEY current_hotkey;
+	HOTKEY * current_hotkey;
+	int i, j;
+	int combination_pressed;
 
 	for(i = 0; i < len_list(hotkeys_list); i++)
 	{
-		current_hotkey = get_list_at(hotkeys_list, i);
+		current_hotkey = (HOTKEY *)get_list_at(hotkeys_list, i);
 
 		combination_pressed = 1;
 
-		if( current_hotkey.enabled == 1)
+		if( current_hotkey->enabled == 1)
 		{
 			for(j = 0; j < 3; j++)
 			{
-				if( current_hotkey.keys[j] != -1)
+				if( current_hotkey->keys[j] != -1)
 				{
-					if(	current_hotkey.keys[j] == MAKE_LEFT_SHIFT || 
-						current_hotkey.keys[j] == MAKE_CTRL ||
-						current_hotkey.keys[j] == MAKE_ALT ||
-						current_hotkey.keys[j] == MAKE_RIGHT_SHIFT )
+					if(	current_hotkey->keys[j] == MAKE_LEFT_SHIFT || 
+						current_hotkey->keys[j] == MAKE_CTRL ||
+						current_hotkey->keys[j] == MAKE_ALT ||
+						current_hotkey->keys[j] == MAKE_RIGHT_SHIFT )
 					{
-						if(!Get_Key(current_hotkey.keys[j]))
+						if(!Get_Key(current_hotkey->keys[j]))
 						{
 							combination_pressed = 0;
 						}
 					}
 					else
 					{
-						if(!Get_Key_Once(current_hotkey.keys[j]))
+						if(!Get_Key_Once(current_hotkey->keys[j]))
 						{
 							combination_pressed = 0;
 						}
@@ -363,9 +330,17 @@ void handle_input()
 				}
 			}
 
-			current_hotkey.hotkey_action(current_hotkey.hotkey_action_option);
+			if(combination_pressed)
+			{
+				if (current_hotkey->hotkey_action_option != -1)
+				{
+					current_hotkey->hotkey_action(current_hotkey->hotkey_action_option);
+				}
+			}
 		}
 	}
+
+	input_cursor();
 }
 
 void init_input()
@@ -377,8 +352,8 @@ void init_input()
 	new_hotkey(MAKE_CTRL, MAKE_F, -1, change_mode, MODE_PAINT_FORE);
 	new_hotkey(MAKE_CTRL, MAKE_B, -1, change_mode, MODE_PAINT_BACK);
 	new_hotkey(MAKE_CTRL, MAKE_H, -1, change_mode, MODE_CHANGE_CHAR);
-	new_hotkey(MAKE_F1, -1, -1, show_brush_select, -1);
-	new_hotkey(MAKE_CTRL, MAKE_N, -1, show_confirm_clear, -1);
+	//new_hotkey(MAKE_F1, NULL, NULL, show_brush_select, NULL);
+	//new_hotkey(MAKE_CTRL, MAKE_N, NULL, show_confirm_clear, NULL);
 }
 
 

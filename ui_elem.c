@@ -17,6 +17,7 @@ LIST * active_windows;
 
 LIST * get_active_windows()
 {
+
 	return (LIST *)active_windows;
 }
 
@@ -39,7 +40,16 @@ WINDOW * window(RECT rect, int border_color_fore, int border_color_back, int fil
 	new_window->button_list = create_list();
 	new_window->textbox_list = create_list();
 
+	append_list(active_windows, new_window);
+
 	return new_window;
+}
+
+void close_window(WINDOW * window)
+{
+	destroy_list(window->button_list);
+	destroy_list(window->textbox_list);
+	remove_list(active_windows, window);
 }
 
 void add_button_to_window(BUTTON * button, WINDOW * window)
@@ -60,7 +70,7 @@ void add_textbox_to_window(TEXTBOX * textbox, WINDOW * window)
 	append_list(textbox_list, textbox);
 }
 
-BUTTON * button(RECT on_click_area, void (* on_click)())
+BUTTON * button(RECT on_click_area, void (* on_click)(), int close_window)
 {
 	BUTTON * new_button;
 
@@ -68,6 +78,8 @@ BUTTON * button(RECT on_click_area, void (* on_click)())
 
 	new_button->on_click_area = on_click_area;
 	new_button->on_click = on_click;
+
+	new_button->close_window = close_window;
 
 	return new_button;
 }
