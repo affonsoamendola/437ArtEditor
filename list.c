@@ -91,7 +91,7 @@ void * get_list_at(LIST * source_list, int index)
 
 int get_list_index(LIST * source_list, void * object)
 {
-	int i;
+	int i = -1;
 
 	int index;
 
@@ -105,11 +105,13 @@ int get_list_index(LIST * source_list, void * object)
 
 	for(i = -1; i < len_list(source_list); i++)
 	{
-		if(current_element->content == object)
+		if((int)current_element->content == (int)object)
 		{
 			index = i;
 			break;
 		}
+
+		current_element = current_element->next_element;
 	}
 
 	return index;

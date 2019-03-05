@@ -6,6 +6,9 @@
 
 int shown_page = 0;
 
+unsigned char far * draw_start_offset = (unsigned char far *)PAGE_0;
+RECT draw_rect;
+
 int sign(int value)
 {
 	if(value >= 0)
@@ -88,31 +91,35 @@ void fill_screen(unsigned char character, unsigned char attribute, int page)
 	}
 }
 
-void set_char_on_rect_at(unsigned char far * destination, int posX, int posY, RECT rect, unsigned char character)
+void set_draw_start_offset(unsigned char far * draw_location)
 {
+	draw_start_offset = draw_location;
+} 
 
-	*((unsigned char far *)destination + ((posX + rect.x) * 2) + ((posY + rect.y) * (rect.size_x * 2))    )  = character;
+void set_draw_rect(RECT rect)
+{
+	draw_rect = rect;
 }
 
-void set_attribute_on_rect_at(unsigned char far * destination, int posX, int posY, RECT rect, unsigned char attribute)
+void set_char(int posX, int posY, unsigned char character)
 {
 
-	*((unsigned char far *)destination + ((posX + rect.x) * 2) + ((posY + rect.y) * (rect.size_x * 2)) + 1)  = attribute;	
+	*((unsigned char far *)draw_start_offset + ((posX + draw_rect.x) * 2) + ((posY + draw_rect.y) * (draw_rect.size_x * 2))    )  = character;
 }
 
-void draw_char_on_rect_at(unsigned char far * destination, int posX, int posY, RECT rect, unsigned char character, unsigned char attribute)
+void set_attribute(int posX, int posY, unsigned char attribute)
 {
-	set_char_on_rect_at(destination, posX, posY, rect, character);
-	set_attribute_on_rect_at(destination, posX, posY, rect, attribute);
+
+	*((unsigned char far *)draw_start_offset+ ((posX + draw_rect.x) * 2) + ((posY + draw_rect.y) * (draw_rect.size_x * 2)) + 1)  = attribute;	
 }
 
-void draw_char_on_page(int posX, int posY, unsigned char character, unsigned char attribute, int page)
+void set_screen_element(int posX, int posY, unsigned char character, unsigned char attribute)
 {
-	
-	draw_char_on_rect_at(get_page_address(page), posX, posY, rect(0,0, SCREEN_SIZE_X, SCREEN_SIZE_Y), character, attribute);
+	set_char(posX, posY, character);
+	set_attribute(posX, posY, attribute);
 }
 
-void draw_line_on_rect_at(unsigned char far * destination, int start_x, int start_y, int end_x, int end_y, RECT rect, unsigned char character, unsigned char attribute)
+void draw_line(int start_x, int start_y, int end_x, int end_y, unsigned char character, unsigned char attribute)
 {
 	float delta_x;
 	float delta_y;
@@ -147,7 +154,7 @@ void draw_line_on_rect_at(unsigned char far * destination, int start_x, int star
 
 		for(x = start_x; x <= end_x ; x++)
 		{
-			draw_char_on_rect_at(destination, x, y, rect, character, attribute);
+			set_screen_element(x, y, character, attribute);
 			error = error + delta_error;
 			if(error >= 0.5f)
 			{
@@ -166,7 +173,7 @@ void draw_line_on_rect_at(unsigned char far * destination, int start_x, int star
 
 		for(y = start_y; y < end_y; y++)
 		{
-			draw_char_on_rect_at(destination, x, y, rect, character, attribute);
+			set_screen_element(x, y, character, attribute);
 			error = error + delta_error;
 			if(error >= 0.5f)
 			{
@@ -177,7 +184,7 @@ void draw_line_on_rect_at(unsigned char far * destination, int start_x, int star
 	}	
 }
 
-void print_string_on_rect_at(unsigned char far * destination, int posX, int posY, RECT rect, char* string, unsigned char attribute)
+void print_string(int posX, int posY, char* string, unsigned char attribute)
 {
 	int len;
 	int i;
@@ -186,18 +193,25 @@ void print_string_on_rect_at(unsigned char far * destination, int posX, int posY
 
 	for(i = 0; i < len; i++)
 	{
-		draw_char_on_rect_at(destination, posX + i, posY, rect, string[i], attribute);
+		set_screen_element(posX + i, posY, string[i], attribute);
 	}
 }
 
-unsigned char get_character_on_rect_at(unsigned char far * source, int posX, int posY, RECT rect)
+void print_int(int posX, int posY, int value, unsigned char attribute)
 {
-	return *((unsigned char far *)source + (posX * 2) + (posY * (rect.size_x * 2)));
+	char buffer [16];
+
+	print_string(posX, posY, itoa(value, buffer, 10), attribute);
 }
 
-unsigned char get_attribute_on_rect_at(unsigned char far * source, int posX, int posY, RECT rect)
+unsigned char get_char(int posX, int posY)
 {
-	return *((unsigned char far *)source + (posX * 2) + (posY * (rect.size_x * 2)) + 1);
+	return *((unsigned char far *)draw_start_offset + (posX * 2) + (posY * (draw_rect.size_x * 2)));
+}
+
+unsigned char get_attribute(int posX, int posY)
+{
+	return *((unsigned char far *)draw_start_offset + (posX * 2) + (posY * (draw_rect.size_x * 2)) + 1);
 }
 
 void copy_area_from_image(	unsigned char far * source, unsigned char far * destination, 

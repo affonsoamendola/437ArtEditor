@@ -23,10 +23,10 @@ void show_dialog_2b(RECT bounds, char * text,
 
 void show_confirm_clear()
 {
-	show_dialog_2b(	rect(SCREEN_SIZE_X/2-7, SCREEN_SIZE_Y/2-5, 14, 10), 
+	show_dialog_2b(	rect(SCREEN_SIZE_X/2-7, SCREEN_SIZE_Y/2-2, 14, 4), 
 					"Are you sure you want to clear the screen?",
 					"Yes",
 					"No",
 					clear_canvas,
-					NULL);
+					clear_canvas);
 }

@@ -66,8 +66,6 @@ void view_canvas()
 	RECT area_dest;
 	RECT image_dest;
 
-	fill_screen(0,0,1);
-
 	area_source = rect( viewport_x, viewport_y, SCREEN_SIZE_X, SCREEN_SIZE_Y);
 	image_source = rect( 0, 0, CANVAS_SIZE_X, CANVAS_SIZE_Y);
 	area_dest = rect( 0, 0, SCREEN_SIZE_X, SCREEN_SIZE_Y);
@@ -79,8 +77,6 @@ void view_canvas()
 						 area_dest,
 						 image_dest);
 
-	blink_cursor();
-	copy_page(1, 0);
 }
 
 void move_viewport(int delta_x, int delta_y)

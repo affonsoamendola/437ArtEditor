@@ -14,7 +14,7 @@ typedef struct HOTKEY_
 	int keys[3];
 	int enabled;
 
-	void (* hotkey_action)(int option);
+	void (* hotkey_action)(int);
 	int hotkey_action_option;
 }
 HOTKEY;

@@ -5,6 +5,7 @@
 #include "views.h"
 #include "cga.h"
 #include "ui_elem.h"
+#include "ui.h"
 #include "canvas.h"
 #include "keyb.h"
 #include "list.h"
@@ -169,65 +170,49 @@ void cursor_action()
 
 			if(inside_rect(cursor_x, cursor_y, current_button->on_click_area))
 			{
-				if(current_button->on_click != NULL)
-				{
-					current_button->on_click();
-				}
-
-				if(current_button->close_window)
-				{
-					close_window(current_window);
-				}
+				button_click(current_button);
+				break;
 			}
 		}
 	}
+
+	set_draw_start_offset(get_canvas_address());
+	set_draw_rect(get_canvas_rect());
 
 	if(get_current_view() == VIEW_CANVAS)
 	{
 		if(get_current_mode() == MODE_DRAWING)
 		{
-			draw_char_on_rect_at(	get_canvas_address(),
-									get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
-									rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y),
+			set_screen_element	(	get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
 									selected_char, get_selected_attribute());
 		}
 
 		if(get_current_mode() == MODE_PAINT_FORE)
 		{
-			buffer = get_attribute_on_rect_at( 	get_canvas_address(),
-												get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
-												rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y));
+			buffer = get_attribute 	( get_viewport_x() + cursor_x, get_viewport_y() + cursor_y);
 
 			buffer &= 0xF0;
 			buffer |= selected_fore_color;
 
-			set_attribute_on_rect_at( 	get_canvas_address(),
-										get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
-										rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y),
-										buffer);
+			set_attribute( 	get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
+							buffer);
 		}
 
 		if(get_current_mode() == MODE_PAINT_BACK)
 		{
-			buffer = get_attribute_on_rect_at( 	get_canvas_address(),
-												get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
-												rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y));
+			buffer = get_attribute( get_viewport_x() + cursor_x, get_viewport_y() + cursor_y);
 
 			buffer &= 0x8F;
 			buffer |= (selected_back_color << 4);
 
-			set_attribute_on_rect_at( 	get_canvas_address(),
-										get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
-										rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y),
-										buffer);
+			set_attribute( 	get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
+							buffer);
 		}
 
 		if(get_current_mode() == MODE_CHANGE_CHAR)
 		{
-			set_char_on_rect_at( 		get_canvas_address(),
-										get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
-										rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y),
-										selected_char);
+			set_char( 	get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
+						selected_char);
 		}
 
 		if(get_current_mode() == MODE_LINE)
@@ -240,22 +225,14 @@ void cursor_action()
 			}
 			else
 			{
-				draw_line_on_rect_at(	get_canvas_address(), 
-										line_start_x, line_start_y, 
-										get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
-										rect(0,0, CANVAS_SIZE_X, CANVAS_SIZE_Y), 
-										selected_char, get_selected_attribute());
+				draw_line(	line_start_x, line_start_y, 
+							get_viewport_x() + cursor_x, get_viewport_y() + cursor_y,
+							selected_char, get_selected_attribute());
 
 				line_start_selected = 0;
 			}
 		}
 	}
-	/*
-	if(get_current_view() == VIEW_BRUSH_SELECT)
-	{
-		brush_select_screen_cursor_action();
-	}	
-	*/
 }
 
 void input_cursor()
@@ -332,10 +309,7 @@ void handle_input()
 
 			if(combination_pressed)
 			{
-				if (current_hotkey->hotkey_action_option != -1)
-				{
-					current_hotkey->hotkey_action(current_hotkey->hotkey_action_option);
-				}
+				current_hotkey->hotkey_action(current_hotkey->hotkey_action_option);
 			}
 		}
 	}
@@ -352,8 +326,8 @@ void init_input()
 	new_hotkey(MAKE_CTRL, MAKE_F, -1, change_mode, MODE_PAINT_FORE);
 	new_hotkey(MAKE_CTRL, MAKE_B, -1, change_mode, MODE_PAINT_BACK);
 	new_hotkey(MAKE_CTRL, MAKE_H, -1, change_mode, MODE_CHANGE_CHAR);
-	//new_hotkey(MAKE_F1, NULL, NULL, show_brush_select, NULL);
-	//new_hotkey(MAKE_CTRL, MAKE_N, NULL, show_confirm_clear, NULL);
+	//new_hotkey(MAKE_F1, -1	, -1, show_brush_select, NULL);
+	new_hotkey(MAKE_CTRL, MAKE_N, -1, show_confirm_clear, -1);
 }
 
 

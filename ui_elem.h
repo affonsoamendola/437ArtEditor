@@ -16,8 +16,21 @@
 
 #define BLINK_RATE 1.0f
 
+typedef struct WINDOW_
+{
+	RECT bounds;
+	int border_color_fore;
+	int border_color_back;
+	int fill_color;
+	LIST * textbox_list;
+	LIST * button_list;
+}
+WINDOW;
+
 typedef struct BUTTON_
 {
+	WINDOW * parent_window;
+
 	RECT on_click_area;
 	void (* on_click)();
 	int close_window;
@@ -30,17 +43,6 @@ typedef struct TEXTBOX_
 	char * text;
 }
 TEXTBOX;
-
-typedef struct WINDOW_
-{
-	RECT bounds;
-	int border_color_fore;
-	int border_color_back;
-	int fill_color;
-	LIST * textbox_list;
-	LIST * button_list;
-}
-WINDOW;
 
 LIST * get_active_windows();
 

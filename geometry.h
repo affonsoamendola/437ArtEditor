@@ -1,6 +1,8 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
+#define RECT_ZERO 	{0, 0, 0, 0}
+
 typedef struct RECT_
 {
 	int x;
