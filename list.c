@@ -88,6 +88,10 @@ void * get_list_at(LIST * source_list, int index)
 	return content;
 }
 
+void * get_list_last(LIST * source_list)
+{
+	return source_list->prev_element->content;
+}
 
 int get_list_index(LIST * source_list, void * object)
 {
@@ -144,6 +148,18 @@ void remove_list_at(LIST * source_list, int index)
 	while(current_element->next_element != source_list);
 
 	free(removed_element);
+}
+
+void remove_list_last(LIST * source_list)
+{
+	LIST_ELEMENT * to_remove;
+
+	to_remove = source_list->prev_element;
+
+	to_remove->prev_element->next_element = source_list;
+	source_list->prev_element = to_remove->prev_element;
+
+	free(to_remove);
 }
 
 void remove_list(LIST * source_list, void * object)

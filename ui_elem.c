@@ -41,6 +41,8 @@ WINDOW * window(RECT rect, int border_color_fore, int border_color_back, int fil
 	new_window->button_list = create_list();
 	new_window->textbox_list = create_list();
 
+	new_window->hotkey_list = create_list();
+
 	append_list(active_windows, new_window);
 
 	return new_window;
@@ -49,8 +51,8 @@ WINDOW * window(RECT rect, int border_color_fore, int border_color_back, int fil
 void close_window(WINDOW * window)
 {
 	destroy_list(window->button_list);
-
 	destroy_list(window->textbox_list);
+	destroy_list(window->hotkey_list);
 
 	remove_list(active_windows, window);
 }
@@ -75,11 +77,20 @@ void add_textbox_to_window(TEXTBOX * textbox, WINDOW * window)
 	append_list(textbox_list, textbox);
 }
 
-BUTTON * button(RECT on_click_area, void (* on_click)(), int close_window)
+BUTTON * button(RECT on_click_area, int button_color, int button_color_hover, int button_color_click,
+				char * text,
+				void (* on_click)(), 
+				int close_window)
 {	
 	BUTTON * new_button;
 
 	new_button = (BUTTON *)malloc(sizeof(BUTTON));
+
+	new_button->text = text;
+	
+	new_button->button_color = button_color;
+	new_button->button_color_hover = button_color_hover;
+	new_button->button_color_click = button_color_click;
 
 	new_button->on_click_area = on_click_area;
 	new_button->on_click = on_click;
@@ -91,7 +102,7 @@ BUTTON * button(RECT on_click_area, void (* on_click)(), int close_window)
 
 void button_click(BUTTON * button)
 {
-	//button->on_click();
+	button->on_click();
 
 	if(button->close_window)
 	{
@@ -105,7 +116,8 @@ void button_click(BUTTON * button)
 	}
 }
 
-TEXTBOX * textbox(RECT text_area, char * text)
+TEXTBOX * textbox(RECT text_area, char * text, int alignment)
+//Alignment -1 = left, 0 = centralized, 1 = right
 {
 	TEXTBOX * new_textbox;
 
@@ -170,6 +182,34 @@ void draw_window(WINDOW * window)
 			set_screen_element(i,  j,	BLOCK,	window->fill_color);
 		}
 	}
+}
+
+void draw_button(BUTTON * button)
+{
+	int i, j;
+	int text_len = strlen(button->text);
+
+	set_draw_start_offset(get_page_address(1));
+	set_draw_rect(rect(0, 0, SCREEN_SIZE_X, SCREEN_SIZE_Y));
+
+	for(i = 0; i < button->on_click_area.size_x; i++)
+	{
+		for(j = 0; j < button->on_click_area.size_y; j++)
+		{
+			set_screen_element( button->on_click_area.x + i, 	
+								button->on_click_area.y + j,				  			
+								' ',	
+								(button->button_color<<4));
+		}
+	}
+
+	for(i = 0; i < text_len; i ++ )
+	{
+		set_char(	button->on_click_area.x + (button->on_click_area.size_x/2) - (text_len/2) + i,
+					button->on_click_area.y + (button->on_click_area.size_y/2),
+					*(button->text + i));
+	}
+
 }
 
 void draw_window_shadowed(WINDOW * window)

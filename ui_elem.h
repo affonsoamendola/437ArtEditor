@@ -22,20 +22,14 @@ typedef struct WINDOW_
 	int border_color_fore;
 	int border_color_back;
 	int fill_color;
+	
 	LIST * textbox_list;
 	LIST * button_list;
+
+	LIST * hotkey_list;
+
 }
 WINDOW;
-
-typedef struct BUTTON_
-{
-	WINDOW * parent_window;
-
-	RECT on_click_area;
-	void (* on_click)();
-	int close_window;
-}
-BUTTON;
 
 typedef struct TEXTBOX_
 {
@@ -43,6 +37,23 @@ typedef struct TEXTBOX_
 	char * text;
 }
 TEXTBOX;
+
+typedef struct BUTTON_
+{
+	WINDOW * parent_window;
+
+	char * text;
+
+	int button_color;
+	int button_color_hover;
+	int button_color_click;
+
+	RECT on_click_area;
+
+	void (* on_click)();
+	int close_window;
+}
+BUTTON;
 
 LIST * get_active_windows();
 
@@ -54,9 +65,12 @@ void add_button_to_window(BUTTON * button, WINDOW * window);
 
 void add_textbox_to_window(TEXTBOX * textbox, WINDOW * window);
 
-BUTTON * button(RECT on_click_area, void (* on_click)(), int close_window);
+BUTTON * button(RECT on_click_area, int button_color, int button_color_hover, int button_color_click,
+				char * text,
+				void (* on_click)(), 
+				int close_window);
 
-TEXTBOX * textbox(RECT bounds, char * text);
+TEXTBOX * textbox(RECT text_area, char * text, int alignment);
 
 void show_dialog_yn(RECT bounds, char * text, void (* yes_button_action)(), void (* no_button_action)());
 

@@ -19,6 +19,11 @@ LIST * create_list();
 int append_list(LIST * target_list, void * content);
 
 void * get_list_at(LIST * source_list, int index);
+
+void * get_list_last(LIST * source_list);
+
+void remove_list_last(LIST * source_list);
+
 void remove_list_at(LIST * source_list, int index);
 
 int len_list(LIST * source_list);

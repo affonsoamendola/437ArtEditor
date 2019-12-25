@@ -47,7 +47,7 @@ void set_current_view(int view)
 
 void show_ui()
 {
-	int i;
+	int i, j;
 
 	LIST * active_windows;
 
@@ -55,7 +55,16 @@ void show_ui()
 	
 	for(i = 0; i < len_list(active_windows); i++)
 	{
-		draw_window_shadowed(get_list_at(active_windows, i));
+		WINDOW * current_window = get_list_at(active_windows, i);
+
+		draw_window_shadowed(current_window);
+
+		for(j = 0; j < len_list(current_window->button_list); j++)
+		{
+			BUTTON * current_button = get_list_at(current_window->button_list, j);
+
+			draw_button(current_button);
+		}
 	}
 }
 

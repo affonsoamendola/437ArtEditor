@@ -14,3 +14,10 @@ void init_sequence()
 	init_ui();
 	init_input();
 }
+
+void destroy_sequence()
+{
+	destroy_input();
+	//destroy_ui();
+	//destroy_canvas();
+}

@@ -30,11 +30,15 @@ int line_start_x = 0;
 int line_start_y = 0;
 int line_start_selected = 0;
 
-LIST * hotkeys_list;
+LIST * default_hotkeys_list;
+
+LIST * active_hotkey_stack;
 
 void set_all_hotkeys_enabled(int value)
 {
 	int  i;
+
+	LIST * hotkeys_list = (LIST *)get_list_last(active_hotkey_stack);
 
 	for(i = 0; i < len_list(hotkeys_list); i++)
 	{
@@ -42,12 +46,22 @@ void set_all_hotkeys_enabled(int value)
 	}
 }
 
-void set_hotkey_enabled(int value, int hotkey_index)
+LIST * get_active_hotkey_list()
 {
-	((HOTKEY *)get_list_at(hotkeys_list, hotkey_index))->enabled = value;
+	return (LIST *)get_list_last(active_hotkey_stack);
 }
 
-HOTKEY_INDEX new_hotkey(int key_1, int key_2, int key_3, void (* hotkey_action)(int), int hotkey_action_option)
+void set_hotkey_enabled(int value, int hotkey_index)
+{
+	((HOTKEY *)get_list_at(get_active_hotkey_list(), hotkey_index))->enabled = value;
+}
+
+HOTKEY_INDEX new_hotkey(int key_1, 
+						int key_2, 
+						int key_3, 
+						void (* hotkey_action)(int), 
+						int hotkey_action_option,
+						LIST * hotkey_list)
 {
 	HOTKEY * hotkey;
 
@@ -62,7 +76,7 @@ HOTKEY_INDEX new_hotkey(int key_1, int key_2, int key_3, void (* hotkey_action)(
 	hotkey->hotkey_action = hotkey_action;
 	hotkey->hotkey_action_option = hotkey_action_option;
 
-	return append_list(hotkeys_list, hotkey);
+	return append_list(hotkey_list, hotkey);
 }
 
 int get_current_mode()
@@ -85,7 +99,6 @@ unsigned char get_selected_attribute()
 
 	return (selected_fore_color | (selected_back_color << 4) | (selected_blink << 7));
 }
-
 
 void edge_event(int delta_x, int delta_y)
 {
@@ -274,6 +287,7 @@ void handle_input()
 	HOTKEY * current_hotkey;
 	int i, j;
 	int combination_pressed;
+	LIST * hotkeys_list = (LIST *)get_list_last(active_hotkey_stack);
 
 	for(i = 0; i < len_list(hotkeys_list); i++)
 	{
@@ -319,15 +333,46 @@ void handle_input()
 
 void init_input()
 {
-	hotkeys_list = create_list();
+	default_hotkeys_list = create_list();
+	active_hotkey_stack = create_list();
+
+	append_list(active_hotkey_stack, (void *)default_hotkeys_list);
 	
-	new_hotkey(MAKE_CTRL, MAKE_L, -1, change_mode, MODE_LINE);
-	new_hotkey(MAKE_CTRL, MAKE_D, -1, change_mode, MODE_DRAWING);
-	new_hotkey(MAKE_CTRL, MAKE_F, -1, change_mode, MODE_PAINT_FORE);
-	new_hotkey(MAKE_CTRL, MAKE_B, -1, change_mode, MODE_PAINT_BACK);
-	new_hotkey(MAKE_CTRL, MAKE_H, -1, change_mode, MODE_CHANGE_CHAR);
-	//new_hotkey(MAKE_F1, -1	, -1, show_brush_select, NULL);
-	new_hotkey(MAKE_CTRL, MAKE_N, -1, show_confirm_clear, -1);
+	new_hotkey(MAKE_CTRL, MAKE_L, -1, change_mode, MODE_LINE, default_hotkeys_list);
+	new_hotkey(MAKE_CTRL, MAKE_D, -1, change_mode, MODE_DRAWING, default_hotkeys_list );
+	new_hotkey(MAKE_CTRL, MAKE_F, -1, change_mode, MODE_PAINT_FORE, default_hotkeys_list);
+	new_hotkey(MAKE_CTRL, MAKE_B, -1, change_mode, MODE_PAINT_BACK, default_hotkeys_list);
+	new_hotkey(MAKE_CTRL, MAKE_H, -1, change_mode, MODE_CHANGE_CHAR, default_hotkeys_list);
+	//new_hotkey(MAKE_F1, -1	, -1, show_brush_select, NULL, default_hotkeys_list);
+	new_hotkey(MAKE_CTRL, MAKE_N, -1, show_confirm_clear, -1, default_hotkeys_list);
+}
+
+void destroy_input()
+{
+	destroy_list(default_hotkeys_list);
+	destroy_list(active_hotkey_stack);
+}
+
+void destroy_hotkey_list(LIST * hotkey_list)
+{
+	int i;
+	for(i = 0; i < len_list(hotkey_list); i++)
+	{
+		free(get_list_at(hotkey_list, i));
+	}
+
+	destroy_list(hotkey_list);
+}
+
+void push_hotkey_list(LIST * hotkey_list)
+{
+	append_list(active_hotkey_stack, (void *)hotkey_list);
+}
+
+void pop_hotkey_list()
+{
+	destroy_hotkey_list(get_active_hotkey_list());
+	remove_list_last(active_hotkey_stack);
 }
 
 

@@ -46,4 +46,6 @@ void input_ui_peek();
 
 void handle_input();
 
+void destroy_input();
+
 #endif

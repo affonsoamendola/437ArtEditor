@@ -29,30 +29,9 @@ void game_loop()
 
 void main()
 {
-/*
-	LIST * test = create_list();
-
-	int * a;
-	int * b;
-
-	a = malloc(sizeof(int));
-	b = malloc(sizeof(int));
-
-	*a = 10;
-	*b = 20;
-
-	append_list(test, a);
-	append_list(test, b);
-
-	printf("Element 10 found at: %d\n", get_list_index(test, a));
-	printf("Element 20 found at: %d\n", get_list_index(test, b));
-	
-	remove_list(test, a);
-
-	printf("Element 20 found at: %d\n", get_list_index(test, b));
-
-	printf("\n%d", len_list(test));*/
-
 	init_sequence();
+	
 	game_loop();
+
+	destroy_sequence();
 }
