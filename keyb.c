@@ -151,5 +151,3 @@ void Keyboard_Restore_Driver()
 	_dos_setvect(KEYBOARD_INTERRUPT, Old_Keyboard_ISR);
 
 }
-
-

@@ -33,7 +33,7 @@ int line_start_selected = 0;
 LIST * default_hotkeys_list;
 
 LIST * active_hotkey_stack;
-
+z
 void set_all_hotkeys_enabled(int value)
 {
 	int  i;
@@ -374,5 +374,3 @@ void pop_hotkey_list()
 	destroy_hotkey_list(get_active_hotkey_list());
 	remove_list_last(active_hotkey_stack);
 }
-
-

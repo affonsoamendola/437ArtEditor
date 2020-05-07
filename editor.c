@@ -30,8 +30,6 @@ void game_loop()
 void main()
 {
 	init_sequence();
-	
 	game_loop();
-
 	destroy_sequence();
 }

@@ -1,23 +1,22 @@
-#	Copyright Affonso Amendola 2019					#
-#													#
-#	LibEGA											#
-#---------------------------------------------------#
+obj = canvas.obj cga.obj editor.obj geometry.obj init.obj input.obj keyb.obj list.obj timer.obj ui.obj ui_elem.obj views.obj
+bin = 437.exe
 
-GAMENAME = 437ART
-CC = tcc
-RM = rm -f
+CC = wcc
+CFLAGS = -zq -otx
+LD = wlink
+INCLUDE = include
+LIB = /usr/share/openwatcom/lib286/dos/:/usr/share/openwatcom/lib286
 
-INCLUDE = include;D:\tc\include;.
-LIB = D:\tc\lib
-CCFLAGS =
+$(bin): $(obj)
+	$(LD) name $@ file { $(obj) } libpath $(LIB) form dos
 
-all: $(GAMENAME).exe
+.c.obj:
+	$(CC) -i$(INCLUDE) -fo=$@ $(CFLAGS) $<
 
-$(GAMENAME).exe:
-	$(CC) "-I$(INCLUDE) -L$(LIB) -e$(GAMENAME) $(CCFLAGS) *.c"  
-	
-run:
-	dosbox -conf ~/.dosbox/tcc.conf -c "$(GAMENAME)"
+clean: .symbolic
+	rm *.obj
+	rm *.err
+	rm $(bin)
 
-clean:
-	$(RM) *.OBJ *.EXE *.LOG *.BAT
+run: .symbolic
+	dosbox $(bin)
